@@ -1,0 +1,46 @@
+﻿@page "/books"
+
+@attribute [StreamRendering(true)]
+@attribute [OutputCache(Duration = 5)]
+
+@inject ArctusApiClient ArctusApi
+
+<PageTitle>Books</PageTitle>
+
+<h1>Books</h1>
+
+<p>This component demonstrates showing data loaded from a backend API service.</p>
+
+@if (books == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in books)
+        {
+            <tr>
+                    <td>@book.Id</td>
+                    <td>@book.Title</td>
+                </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+private Book[]? books;
+
+protected override async Task OnInitializedAsync()
+{
+    books = await ArctusApi.GetBooksAsync();
+}
+}
