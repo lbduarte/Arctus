@@ -14,6 +14,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.MapControllers();
 
+app.MapDefaultEndpoints();
+
 var context = app.Services.CreateScope().ServiceProvider
     .GetRequiredService<ArctusContext>();
 DatabaseHelper.Seed(context);
