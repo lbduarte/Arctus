@@ -1,7 +1,8 @@
 ﻿using Arctus.ApiService.DbContexts;
+using Arctus.ApiService.DTOs;
 using Arctus.ApiService.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Arctus.ApiService.Controllers;
 
@@ -17,21 +18,54 @@ public class BooksController : ControllerBase
     }
 
     [HttpGet]
-    public IAsyncEnumerable<Book> GetBooks()
+    public IAsyncEnumerable<BookResponse> GetBooks()
     {
-        return _context.Books.AsAsyncEnumerable();
+        return _context.Books.Select(x => x.ToBookResponse()).AsAsyncEnumerable();
     }
 
     [HttpGet("{id}")]
-    public async Task<Book?> GetBook(long id)
+    public async Task<IActionResult> GetBook(long id)
     {
-        return await _context.Books.FindAsync(id);
+        Book? book = await _context.Books.FindAsync(id);
+
+        if (book == null)
+            return NotFound();
+
+        return Ok(book.ToBookResponse());
     }
 
     [HttpPost]
-    public async Task SaveBook([FromBody] Book book)
+    public async Task<IActionResult> PostBook(CreateBookRequest request)
     {
-        await _context.Books.AddAsync(book);
+        Book book = request.ToBook();
+        _context.Books.Add(book);
         await _context.SaveChangesAsync();
+        BookResponse response = book.ToBookResponse();
+
+        return CreatedAtAction(nameof(GetBook), new { id = response.Id }, response);
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> PutBook(UpdateBookRequest request)
+    {
+        Book updatedBook = request.ToBook();
+        _context.Update(book);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteBook(long id)
+    {
+        _context.Books.Remove(new Book()
+        {
+            Id = id,
+            Title = string.Empty
+        });
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
